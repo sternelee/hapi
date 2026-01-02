@@ -16,6 +16,10 @@ export interface Settings {
     machineIdConfirmedByServer?: boolean
     daemonAutoStartWhenRunningHappy?: boolean
     cliApiToken?: string
+    vapidKeys?: {
+        publicKey: string
+        privateKey: string
+    }
     // Server configuration (persisted from environment variables)
     telegramBotToken?: string
     webappPort?: number

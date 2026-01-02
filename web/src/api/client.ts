@@ -6,6 +6,9 @@ import type {
     MachinePathsExistsResponse,
     MachinesResponse,
     MessagesResponse,
+    PushSubscriptionPayload,
+    PushUnsubscribePayload,
+    PushVapidPublicKeyResponse,
     SlashCommandsResponse,
     SpawnResponse,
     SessionResponse,
@@ -147,6 +150,24 @@ export class ApiClient {
 
     async getSessions(): Promise<SessionsResponse> {
         return await this.request<SessionsResponse>('/api/sessions')
+    }
+
+    async getPushVapidPublicKey(): Promise<PushVapidPublicKeyResponse> {
+        return await this.request<PushVapidPublicKeyResponse>('/api/push/vapid-public-key')
+    }
+
+    async subscribePushNotifications(payload: PushSubscriptionPayload): Promise<void> {
+        await this.request('/api/push/subscribe', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    }
+
+    async unsubscribePushNotifications(payload: PushUnsubscribePayload): Promise<void> {
+        await this.request('/api/push/subscribe', {
+            method: 'DELETE',
+            body: JSON.stringify(payload)
+        })
     }
 
     async getSession(sessionId: string): Promise<SessionResponse> {

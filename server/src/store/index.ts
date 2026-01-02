@@ -52,6 +52,15 @@ export type StoredUser = {
     createdAt: number
 }
 
+export type StoredPushSubscription = {
+    id: number
+    namespace: string
+    endpoint: string
+    p256dh: string
+    auth: string
+    createdAt: number
+}
+
 export type VersionedUpdateResult<T> =
     | { result: 'success'; version: number; value: T }
     | { result: 'version-mismatch'; version: number; value: T }
@@ -103,6 +112,15 @@ type DbUserRow = {
     platform: string
     platform_user_id: string
     namespace: string
+    created_at: number
+}
+
+type DbPushSubscriptionRow = {
+    id: number
+    namespace: string
+    endpoint: string
+    p256dh: string
+    auth: string
     created_at: number
 }
 
@@ -168,6 +186,17 @@ function toStoredUser(row: DbUserRow): StoredUser {
         platform: row.platform,
         platformUserId: row.platform_user_id,
         namespace: row.namespace,
+        createdAt: row.created_at
+    }
+}
+
+function toStoredPushSubscription(row: DbPushSubscriptionRow): StoredPushSubscription {
+    return {
+        id: row.id,
+        namespace: row.namespace,
+        endpoint: row.endpoint,
+        p256dh: row.p256dh,
+        auth: row.auth,
         createdAt: row.created_at
     }
 }
@@ -267,6 +296,17 @@ export class Store {
                 UNIQUE(platform, platform_user_id)
             );
             CREATE INDEX IF NOT EXISTS idx_users_platform ON users(platform);
+
+            CREATE TABLE IF NOT EXISTS push_subscriptions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                namespace TEXT NOT NULL,
+                endpoint TEXT NOT NULL,
+                p256dh TEXT NOT NULL,
+                auth TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                UNIQUE(namespace, endpoint)
+            );
+            CREATE INDEX IF NOT EXISTS idx_push_subscriptions_namespace ON push_subscriptions(namespace);
         `)
 
         // Step 2: Migrate existing tables (add missing columns)
@@ -754,5 +794,43 @@ export class Store {
             'DELETE FROM sessions WHERE id = ? AND namespace = ?'
         ).run(id, namespace)
         return result.changes > 0
+    }
+
+    addPushSubscription(
+        namespace: string,
+        subscription: { endpoint: string; p256dh: string; auth: string }
+    ): void {
+        const now = Date.now()
+        this.db.prepare(`
+            INSERT INTO push_subscriptions (
+                namespace, endpoint, p256dh, auth, created_at
+            ) VALUES (
+                @namespace, @endpoint, @p256dh, @auth, @created_at
+            )
+            ON CONFLICT(namespace, endpoint)
+            DO UPDATE SET
+                p256dh = excluded.p256dh,
+                auth = excluded.auth,
+                created_at = excluded.created_at
+        `).run({
+            namespace,
+            endpoint: subscription.endpoint,
+            p256dh: subscription.p256dh,
+            auth: subscription.auth,
+            created_at: now
+        })
+    }
+
+    removePushSubscription(namespace: string, endpoint: string): void {
+        this.db.prepare(
+            'DELETE FROM push_subscriptions WHERE namespace = ? AND endpoint = ?'
+        ).run(namespace, endpoint)
+    }
+
+    getPushSubscriptionsByNamespace(namespace: string): StoredPushSubscription[] {
+        const rows = this.db.prepare(
+            'SELECT * FROM push_subscriptions WHERE namespace = ? ORDER BY created_at DESC'
+        ).all(namespace) as DbPushSubscriptionRow[]
+        return rows.map(toStoredPushSubscription)
     }
 }

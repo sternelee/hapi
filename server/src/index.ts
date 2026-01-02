@@ -16,6 +16,9 @@ import { startWebServer } from './web/server'
 import { getOrCreateJwtSecret } from './web/jwtSecret'
 import { createSocketServer } from './socket/server'
 import { SSEManager } from './sse/sseManager'
+import { getOrCreateVapidKeys } from './push/vapidKeys'
+import { PushService } from './push/pushService'
+import { PushNotifier } from './push/pushNotifier'
 import type { Server as BunServer } from 'bun'
 import type { WebSocketData } from '@socket.io/bun-engine'
 
@@ -37,6 +40,7 @@ let syncEngine: SyncEngine | null = null
 let happyBot: HappyBot | null = null
 let webServer: BunServer<WebSocketData> | null = null
 let sseManager: SSEManager | null = null
+let pushNotifier: PushNotifier | null = null
 
 async function main() {
     console.log('HAPI Server starting...')
@@ -74,6 +78,9 @@ async function main() {
 
     const store = new Store(config.dbPath)
     const jwtSecret = await getOrCreateJwtSecret()
+    const vapidKeys = await getOrCreateVapidKeys(config.dataDir)
+    const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@hapi.run'
+    const pushService = new PushService(vapidKeys, vapidSubject, store)
 
     sseManager = new SSEManager(30_000)
 
@@ -88,6 +95,7 @@ async function main() {
     })
 
     syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager)
+    pushNotifier = new PushNotifier(syncEngine, pushService, config.miniAppUrl)
 
     // Initialize Telegram bot (optional)
     if (config.telegramEnabled && config.telegramBotToken) {
@@ -105,6 +113,7 @@ async function main() {
         getSseManager: () => sseManager,
         jwtSecret,
         store,
+        vapidPublicKey: vapidKeys.publicKey,
         socketEngine: socketServer.engine
     })
 
@@ -119,6 +128,7 @@ async function main() {
     const shutdown = async () => {
         console.log('\nShutting down...')
         await happyBot?.stop()
+        pushNotifier?.stop()
         syncEngine?.stop()
         sseManager?.stop()
         webServer?.stop()

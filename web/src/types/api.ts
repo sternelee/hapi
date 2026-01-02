@@ -197,6 +197,24 @@ export type SlashCommandsResponse = {
     error?: string
 }
 
+export type PushSubscriptionKeys = {
+    p256dh: string
+    auth: string
+}
+
+export type PushSubscriptionPayload = {
+    endpoint: string
+    keys: PushSubscriptionKeys
+}
+
+export type PushUnsubscribePayload = {
+    endpoint: string
+}
+
+export type PushVapidPublicKeyResponse = {
+    publicKey: string
+}
+
 export type SyncEvent =
     | { type: 'session-added'; sessionId: string; data?: unknown; namespace?: string }
     | { type: 'session-updated'; sessionId: string; data?: unknown; namespace?: string }

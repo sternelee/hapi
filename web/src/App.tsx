@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Outlet, useLocation, useMatchRoute } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { getTelegramWebApp } from '@/hooks/useTelegram'
+import { getTelegramWebApp, isTelegramApp } from '@/hooks/useTelegram'
 import { initializeTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthSource } from '@/hooks/useAuthSource'
 import { useServerUrl } from '@/hooks/useServerUrl'
 import { useSSE } from '@/hooks/useSSE'
 import { useSyncingState } from '@/hooks/useSyncingState'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { queryKeys } from '@/lib/query-keys'
 import { AppContextProvider } from '@/lib/app-context'
 import { useAppGoBack } from '@/hooks/useAppGoBack'
@@ -93,6 +94,8 @@ export function App() {
     const syncTokenRef = useRef(0)
     const isFirstConnectRef = useRef(true)
     const baseUrlRef = useRef(baseUrl)
+    const pushPromptedRef = useRef(false)
+    const { isSupported: isPushSupported, permission: pushPermission, requestPermission, subscribe } = usePushNotifications(api)
 
     useEffect(() => {
         if (baseUrlRef.current === baseUrl) {
@@ -103,6 +106,35 @@ export function App() {
         syncTokenRef.current = 0
         queryClient.clear()
     }, [baseUrl, queryClient])
+
+    useEffect(() => {
+        if (!api || !token) {
+            pushPromptedRef.current = false
+            return
+        }
+        if (isTelegramApp() || !isPushSupported) {
+            return
+        }
+        if (pushPromptedRef.current) {
+            return
+        }
+        pushPromptedRef.current = true
+
+        const run = async () => {
+            if (pushPermission === 'granted') {
+                await subscribe()
+                return
+            }
+            if (pushPermission === 'default') {
+                const granted = await requestPermission()
+                if (granted) {
+                    await subscribe()
+                }
+            }
+        }
+
+        void run()
+    }, [api, isPushSupported, pushPermission, requestPermission, subscribe, token])
 
     const handleSseConnect = useCallback(() => {
         // Increment token to track this specific connection

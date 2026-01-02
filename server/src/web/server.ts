@@ -16,6 +16,7 @@ import { createPermissionsRoutes } from './routes/permissions'
 import { createMachinesRoutes } from './routes/machines'
 import { createGitRoutes } from './routes/git'
 import { createCliRoutes } from './routes/cli'
+import { createPushRoutes } from './routes/push'
 import type { SSEManager } from '../sse/sseManager'
 import type { Server as BunServer } from 'bun'
 import type { Server as SocketEngine } from '@socket.io/bun-engine'
@@ -55,6 +56,7 @@ function createWebApp(options: {
     getSseManager: () => SSEManager | null
     jwtSecret: Uint8Array
     store: Store
+    vapidPublicKey: string
     embeddedAssetMap: Map<string, EmbeddedWebAsset> | null
 }): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
@@ -68,7 +70,7 @@ function createWebApp(options: {
     const corsOriginOption = corsOrigins.includes('*') ? '*' : corsOrigins
     const corsMiddleware = cors({
         origin: corsOriginOption,
-        allowMethods: ['GET', 'POST', 'OPTIONS'],
+        allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
         allowHeaders: ['authorization', 'content-type']
     })
     app.use('/api/*', corsMiddleware)
@@ -86,6 +88,7 @@ function createWebApp(options: {
     app.route('/api', createPermissionsRoutes(options.getSyncEngine))
     app.route('/api', createMachinesRoutes(options.getSyncEngine))
     app.route('/api', createGitRoutes(options.getSyncEngine))
+    app.route('/api', createPushRoutes(options.store, options.vapidPublicKey))
 
     if (options.embeddedAssetMap) {
         const embeddedAssetMap = options.embeddedAssetMap
@@ -170,6 +173,7 @@ export async function startWebServer(options: {
     getSseManager: () => SSEManager | null
     jwtSecret: Uint8Array
     store: Store
+    vapidPublicKey: string
     socketEngine: SocketEngine
 }): Promise<BunServer<WebSocketData>> {
     const isCompiled = isBunCompiled()
@@ -179,6 +183,7 @@ export async function startWebServer(options: {
         getSseManager: options.getSseManager,
         jwtSecret: options.jwtSecret,
         store: options.store,
+        vapidPublicKey: options.vapidPublicKey,
         embeddedAssetMap
     })
 
