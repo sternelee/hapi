@@ -12,6 +12,8 @@ function buildEnv(): Record<string, string> {
 }
 
 export function registerOpenCodeAgent(yolo: boolean): void {
+    // OpenCode uses 'acp' as a stable subcommand (unlike Gemini's --experimental-acp flag)
+    // as ACP support is production-ready in OpenCode
     const args = ['acp'];
     if (yolo) args.push('--yolo');
 
