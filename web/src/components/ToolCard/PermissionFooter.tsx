@@ -39,6 +39,7 @@ function isCodexSession(metadata: SessionMetadataSummary | null, toolName: strin
         || metadata?.flavor === 'opencode'
         || toolName.startsWith('Codex')
         || toolName.startsWith('Gemini')
+        || toolName.startsWith('OpenCode')
 }
 
 function formatPermissionSummary(permission: ToolPermission, toolName: string, toolInput: unknown, codex: boolean, t: (key: string) => string): string {
