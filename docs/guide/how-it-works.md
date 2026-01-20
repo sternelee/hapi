@@ -47,7 +47,7 @@ HAPI consists of three interconnected components that work together to provide r
 
 ### HAPI CLI
 
-The CLI is a wrapper around AI coding agents (Claude Code, Codex, Gemini). It:
+The CLI is a wrapper around AI coding agents (Claude Code, Codex, Gemini, OpenCode). It:
 
 - Starts and manages coding sessions
 - Registers sessions with the HAPI server
@@ -59,6 +59,7 @@ The CLI is a wrapper around AI coding agents (Claude Code, Codex, Gemini). It:
 hapi              # Start Claude Code session
 hapi codex        # Start OpenAI Codex session
 hapi gemini       # Start Google Gemini session
+hapi opencode     # Start OpenCode session
 hapi runner start # Run background service for remote session spawning
 ```
 
@@ -173,7 +174,7 @@ HAPI's defining feature is the ability to seamlessly hand off control between lo
 
 ### Local Mode
 
-When working in local mode, you have the full terminal experience — it is native Claude Code or Codex:
+When working in local mode, you have the full terminal experience — it is native Claude Code, Codex, or OpenCode:
 
 - Direct keyboard input with instant response
 - Full terminal UI with syntax highlighting

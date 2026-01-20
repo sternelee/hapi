@@ -93,7 +93,7 @@ export class RpcGateway {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'codex' | 'gemini' = 'claude',
+        agent: 'claude' | 'codex' | 'gemini' | 'opencode' = 'claude',
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string

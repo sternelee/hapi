@@ -62,7 +62,7 @@ export function useSessionActions(
             if (!api || !sessionId) {
                 throw new Error('Session unavailable')
             }
-            const isKnownFlavor = agentFlavor === 'claude' || agentFlavor === 'codex' || agentFlavor === 'gemini'
+            const isKnownFlavor = agentFlavor === 'claude' || agentFlavor === 'codex' || agentFlavor === 'gemini' || agentFlavor === 'opencode'
             if (isKnownFlavor && !isPermissionModeAllowedForFlavor(mode, agentFlavor)) {
                 throw new Error('Invalid permission mode for session flavor')
             }

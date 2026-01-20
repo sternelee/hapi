@@ -327,7 +327,9 @@ export async function startRunner(): Promise<void> {
           ? 'codex'
           : agent === 'gemini'
             ? 'gemini'
-            : 'claude';
+            : agent === 'opencode'
+              ? 'opencode'
+              : 'claude';
         const args = [
           agentCommand,
           '--hapi-starting-mode', 'remote',

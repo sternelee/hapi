@@ -1,12 +1,13 @@
 # hapi CLI
 
-Run Claude Code, Codex, or Gemini sessions from your terminal and control them remotely through the hapi server.
+Run Claude Code, Codex, Gemini, or OpenCode sessions from your terminal and control them remotely through the hapi server.
 
 ## What it does
 
 - Starts Claude Code sessions and registers them with hapi-server.
 - Starts Codex mode for OpenAI-based sessions.
 - Starts Gemini mode via ACP (Anthropic Code Plugins).
+- Starts OpenCode mode via ACP (Agent Client Protocol).
 - Provides an MCP stdio bridge for external tools.
 - Manages a background runner for long-running sessions.
 - Includes diagnostics and auth helpers.
@@ -26,6 +27,8 @@ Run Claude Code, Codex, or Gemini sessions from your terminal and control them r
 - `hapi codex` - Start Codex mode. See `src/codex/runCodex.ts`.
 - `hapi gemini` - Start Gemini mode via ACP. See `src/agent/runners/runAgentSession.ts`.
   Note: Gemini runs in remote mode only; it waits for messages from the server UI/Telegram.
+- `hapi opencode` - Start OpenCode mode via ACP. See `src/agent/runners/runAgentSession.ts`.
+  Note: OpenCode runs in remote mode only; it waits for messages from the server UI/Telegram.
 
 ### Authentication
 
@@ -115,7 +118,7 @@ bun run build:single-exe
 - `src/api/` - Bot communication (Socket.IO + REST).
 - `src/claude/` - Claude Code integration.
 - `src/codex/` - Codex mode integration.
-- `src/agent/` - Multi-agent support (Gemini via ACP).
+- `src/agent/` - Multi-agent support (Gemini, OpenCode via ACP).
 - `src/runner/` - Background service.
 - `src/commands/` - CLI command handlers.
 - `src/ui/` - User interface and diagnostics.
