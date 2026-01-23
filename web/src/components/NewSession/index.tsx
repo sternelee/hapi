@@ -12,6 +12,7 @@ import { ActionButtons } from './ActionButtons'
 import { AgentSelector } from './AgentSelector'
 import { DirectorySection } from './DirectorySection'
 import { MachineSelector } from './MachineSelector'
+import { ModelSelector } from './ModelSelector'
 import { SessionTypeSelector } from './SessionTypeSelector'
 import { YoloToggle } from './YoloToggle'
 
@@ -34,6 +35,7 @@ export function NewSession(props: {
     const [isDirectoryFocused, setIsDirectoryFocused] = useState(false)
     const [pathExistence, setPathExistence] = useState<Record<string, boolean>>({})
     const [agent, setAgent] = useState<AgentType>('claude')
+    const [model, setModel] = useState('auto')
     const [yoloMode, setYoloMode] = useState(false)
     const [sessionType, setSessionType] = useState<SessionType>('simple')
     const [worktreeName, setWorktreeName] = useState('')
@@ -45,6 +47,10 @@ export function NewSession(props: {
             worktreeInputRef.current?.focus()
         }
     }, [sessionType])
+
+    useEffect(() => {
+        setModel('auto')
+    }, [agent])
 
     useEffect(() => {
         if (props.machines.length === 0) return
@@ -193,6 +199,7 @@ export function NewSession(props: {
                 machineId,
                 directory: directory.trim(),
                 agent,
+                model: model !== 'auto' ? model : undefined,
                 yolo: yoloMode,
                 sessionType,
                 worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
@@ -250,6 +257,12 @@ export function NewSession(props: {
                 agent={agent}
                 isDisabled={isFormDisabled}
                 onAgentChange={setAgent}
+            />
+            <ModelSelector
+                agent={agent}
+                model={model}
+                isDisabled={isFormDisabled}
+                onModelChange={setModel}
             />
             <YoloToggle
                 yoloMode={yoloMode}

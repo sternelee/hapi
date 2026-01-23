@@ -270,11 +270,12 @@ export class SyncEngine {
         machineId: string,
         directory: string,
         agent: 'claude' | 'codex' | 'gemini' = 'claude',
+        model?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string
     ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string }> {
-        return await this.rpcGateway.spawnSession(machineId, directory, agent, yolo, sessionType, worktreeName)
+        return await this.rpcGateway.spawnSession(machineId, directory, agent, model, yolo, sessionType, worktreeName)
     }
 
     async checkPathsExist(machineId: string, paths: string[]): Promise<Record<string, boolean>> {

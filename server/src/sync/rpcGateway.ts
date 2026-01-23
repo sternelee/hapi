@@ -94,6 +94,7 @@ export class RpcGateway {
         machineId: string,
         directory: string,
         agent: 'claude' | 'codex' | 'gemini' = 'claude',
+        model?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string
@@ -102,7 +103,7 @@ export class RpcGateway {
             const result = await this.machineRpc(
                 machineId,
                 'spawn-happy-session',
-                { type: 'spawn-in-directory', directory, agent, yolo, sessionType, worktreeName }
+                { type: 'spawn-in-directory', directory, agent, model, yolo, sessionType, worktreeName }
             )
             if (result && typeof result === 'object') {
                 const obj = result as Record<string, unknown>

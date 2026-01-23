@@ -102,6 +102,8 @@ export default {
   'newSession.type.worktree.desc': '在仓库旁创建新工作树',
   'newSession.type.worktree.placeholder': 'feature-x (默认 1228-xxxx)',
   'newSession.agent': '代理',
+  'newSession.model': '模型',
+  'newSession.model.optional': '可选',
   'newSession.yolo': 'YOLO 模式',
   'newSession.yolo.title': '跳过审批和沙箱',
   'newSession.yolo.desc': '启动时使用危险的代理标志。',

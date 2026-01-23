@@ -333,6 +333,9 @@ export async function startRunner(): Promise<void> {
           '--hapi-starting-mode', 'remote',
           '--started-by', 'runner'
         ];
+        if (options.model) {
+          args.push('--model', options.model);
+        }
         if (yolo) {
           args.push('--yolo');
         }
