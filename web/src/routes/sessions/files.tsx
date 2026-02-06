@@ -248,10 +248,6 @@ export default function FilesPage() {
     } = useGitStatusFiles(api, sessionId)
 
     const shouldSearch = Boolean(searchQuery)
-        || (activeTab === 'changes'
-            && (gitStatus
-                ? (gitStatus.totalStaged === 0 && gitStatus.totalUnstaged === 0)
-                : Boolean(gitError)))
 
     const searchResults = useSessionFileSearch(api, sessionId, searchQuery, {
         enabled: shouldSearch
@@ -465,9 +461,15 @@ export default function FilesPage() {
                                 </div>
                             ) : null}
 
+                            {!gitStatus ? (
+                                <div className="p-6 text-sm text-[var(--app-hint)]">
+                                    Git status unavailable. Use Directories to browse all files, or search.
+                                </div>
+                            ) : null}
+
                             {gitStatus && gitStatus.stagedFiles.length === 0 && gitStatus.unstagedFiles.length === 0 ? (
                                 <div className="p-6 text-sm text-[var(--app-hint)]">
-                                    No changes detected. Use search to browse files.
+                                    No changes detected. Use Directories to browse all files, or search.
                                 </div>
                             ) : null}
                         </div>
