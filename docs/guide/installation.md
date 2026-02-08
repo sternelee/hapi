@@ -147,6 +147,15 @@ hapi hub --no-relay
 
 The hub listens on `http://localhost:3006` by default.
 
+To access from other devices on your local network, bind to `0.0.0.0`:
+
+```bash
+hapi hub --host 0.0.0.0
+# or
+export HAPI_LISTEN_HOST=0.0.0.0
+hapi hub
+```
+
 On first run, HAPI:
 
 1. Creates `~/.hapi/`
