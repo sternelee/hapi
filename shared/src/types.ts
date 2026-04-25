@@ -27,6 +27,7 @@ export type {
     CursorPermissionMode,
     GeminiPermissionMode,
     OpencodePermissionMode,
+    PiPermissionMode,
     PermissionMode,
     PermissionModeOption,
     PermissionModeTone

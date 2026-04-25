@@ -836,7 +836,9 @@ export function buildCliArgs(
         ? 'gemini'
         : agent === 'opencode'
           ? 'opencode'
-          : 'claude';
+          : agent === 'pi'
+            ? 'pi'
+            : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
     if (agent === 'codex') {

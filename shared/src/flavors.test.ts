@@ -37,6 +37,11 @@ describe('hasCapability', () => {
         expect(hasCapability('opencode', Capabilities.Effort)).toBe(false)
     })
 
+    test('pi has no capabilities', () => {
+        expect(hasCapability('pi', Capabilities.ModelChange)).toBe(false)
+        expect(hasCapability('pi', Capabilities.Effort)).toBe(false)
+    })
+
     test('unknown flavor returns false', () => {
         expect(hasCapability('unknown-flavor', Capabilities.ModelChange)).toBe(false)
     })
@@ -54,6 +59,7 @@ describe('getFlavorLabel', () => {
         expect(getFlavorLabel('codex')).toBe('Codex')
         expect(getFlavorLabel('cursor')).toBe('Cursor')
         expect(getFlavorLabel('opencode')).toBe('OpenCode')
+        expect(getFlavorLabel('pi')).toBe('Pi')
     })
 
     test('unknown flavor returns Unknown', () => {
@@ -73,6 +79,7 @@ describe('isKnownFlavor', () => {
         expect(isKnownFlavor('codex')).toBe(true)
         expect(isKnownFlavor('cursor')).toBe(true)
         expect(isKnownFlavor('opencode')).toBe(true)
+        expect(isKnownFlavor('pi')).toBe(true)
     })
 
     test('returns false for unknown/null/undefined', () => {
