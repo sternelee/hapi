@@ -364,7 +364,11 @@ class PiRemoteLauncher extends RemoteLauncherBase {
     private async handleAbort(): Promise<void> {
         if (this.piProcess && this.piProcess.exitCode === null) {
             const abortCmd = JSON.stringify({ type: 'abort' }) + '\n';
-            this.piProcess.stdin?.write(abortCmd);
+            this.piProcess.stdin?.write(abortCmd, (err) => {
+                if (err) {
+                    logger.debug('[pi-remote] Failed to send abort command', err);
+                }
+            });
         }
         this.agentEndResolve?.();
         this.agentEndResolve = null;

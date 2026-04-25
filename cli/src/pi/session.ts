@@ -49,7 +49,6 @@ export class PiSession extends AgentSessionBase<PiMode> {
 
         this.startedBy = opts.startedBy;
         this.startingMode = opts.startingMode;
-        this.permissionMode = opts.permissionMode;
     }
 
     setPermissionMode = (mode: PermissionMode): void => {
