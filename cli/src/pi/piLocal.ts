@@ -10,6 +10,9 @@ export async function piLocal(opts: {
     const args: string[] = [];
 
     if (opts.sessionId) {
+        if (process.platform === 'win32' && /[&|<>^()%!"\r\n]/u.test(opts.sessionId)) {
+            throw new Error('Invalid sessionId');
+        }
         args.push('--session', opts.sessionId);
     }
     if (opts.model) {

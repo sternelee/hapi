@@ -143,8 +143,25 @@ class PiRemoteLauncher extends RemoteLauncherBase {
                 : `Pi process error: ${err.message}`;
             session.sendSessionEvent({ type: 'message', message: msg });
             messageBuffer.addMessage(msg, 'status');
-            (this as { abortController?: AbortController }).abortController?.abort();
-            this.requestExit('exit', msg);
+            this.agentEndResolve?.();
+            this.agentEndResolve = null;
+            this.abortController.abort();
+            void this.requestExit('exit', () => Promise.resolve());
+        });
+
+        piProcess.on('close', (code) => {
+            if (code !== 0 && code !== null) {
+                logger.warn(`[pi-remote] Pi process exited unexpectedly with code ${code}`);
+                const msg = `Pi process exited unexpectedly (code ${code})`;
+                session.sendSessionEvent({ type: 'message', message: msg });
+                messageBuffer.addMessage(msg, 'status');
+            }
+            // Resolve any pending prompt wait so the main loop can exit
+            this.agentEndResolve?.();
+            this.agentEndResolve = null;
+            // Mark exit and abort the queue wait so the main loop breaks
+            this.shouldExit = true;
+            this.abortController.abort();
         });
 
         piProcess.stderr?.on('data', (chunk: Buffer) => {
