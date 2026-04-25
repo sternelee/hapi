@@ -143,6 +143,8 @@ class PiRemoteLauncher extends RemoteLauncherBase {
                 : `Pi process error: ${err.message}`;
             session.sendSessionEvent({ type: 'message', message: msg });
             messageBuffer.addMessage(msg, 'status');
+            (this as { abortController?: AbortController }).abortController?.abort();
+            this.requestExit('exit', msg);
         });
 
         piProcess.stderr?.on('data', (chunk: Buffer) => {
