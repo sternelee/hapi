@@ -130,6 +130,7 @@ describe('appServerConfig', () => {
             mode: 'default',
             settings: {
                 model: 'o3',
+                reasoning_effort: 'high',
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
@@ -155,6 +156,7 @@ describe('appServerConfig', () => {
             mode: 'default',
             settings: {
                 model: 'gpt-5.3-codex-spark',
+                reasoning_effort: 'high',
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
@@ -236,6 +238,7 @@ describe('appServerConfig', () => {
             mode: 'plan',
             settings: {
                 model: 'o3',
+                reasoning_effort: 'high',
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
@@ -255,6 +258,7 @@ describe('appServerConfig', () => {
             mode: 'plan',
             settings: {
                 model: 'o3',
+                reasoning_effort: null,
                 developer_instructions: withCollaborationInstructions(`${codexSystemPrompt}\n\nOnly respond in Chinese.`)
             }
         });
@@ -299,6 +303,7 @@ describe('appServerConfig', () => {
             mode: 'default',
             settings: {
                 model: 'o3',
+                reasoning_effort: null,
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
@@ -319,6 +324,7 @@ describe('appServerConfig', () => {
             mode: 'default',
             settings: {
                 model: 'o3',
+                reasoning_effort: null,
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
@@ -338,6 +344,7 @@ describe('appServerConfig', () => {
             mode: 'default',
             settings: {
                 model: 'gpt-5',
+                reasoning_effort: null,
                 developer_instructions: withCollaborationInstructions(codexSystemPrompt)
             }
         });
