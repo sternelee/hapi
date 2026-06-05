@@ -131,6 +131,7 @@ export default {
 
   // Session actions
   'session.action.rename': '重命名',
+  'session.action.export': '导出对话',
   'session.action.archive': '归档',
   'session.action.delete': '删除',
   'session.action.copy': '复制',
@@ -156,6 +157,21 @@ export default {
   'dialog.delete.confirm': '删除',
   'dialog.delete.confirming': '删除中…',
   'dialog.error.default': '操作失败，请重试。',
+
+  // Session export
+  'session.export.title': '导出对话',
+  'session.export.description': '选择格式，然后下载完整可见对话。',
+  'session.export.format.json': 'JSON',
+  'session.export.format.json.description': '保留会话元数据和消息的无损载荷。',
+  'session.export.format.markdown': 'Markdown',
+  'session.export.format.markdown.description': '从同一份导出载荷生成的可读视图。',
+  'session.export.download': '下载',
+  'session.export.downloading': '导出中…',
+  'session.export.error.noApi': '未连接到服务器',
+  'session.export.error.default': '导出对话失败',
+  'session.export.toast.success.title': '对话已导出',
+  'session.export.toast.success.body': '已下载 {filename}',
+  'session.export.toast.error.title': '导出失败',
 
   // Common buttons
   'button.cancel': '取消',

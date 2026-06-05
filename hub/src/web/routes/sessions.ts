@@ -91,6 +91,29 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         return c.json({ sessions })
     })
 
+    app.get('/sessions/:id/export', (c) => {
+        const engine = requireSyncEngine(c, getSyncEngine)
+        if (engine instanceof Response) {
+            return engine
+        }
+
+        const sessionResult = requireSessionFromParam(c, engine)
+        if (sessionResult instanceof Response) {
+            return sessionResult
+        }
+
+        const result = engine.getSessionExport(sessionResult.sessionId, sessionResult.session)
+        if (result.type === 'too-large') {
+            return c.json({
+                error: 'Session export too large',
+                count: result.count,
+                limit: result.limit
+            }, 413)
+        }
+
+        return c.json(result.payload)
+    })
+
     app.get('/sessions/:id', (c) => {
         const engine = requireSyncEngine(c, getSyncEngine)
         if (engine instanceof Response) {
