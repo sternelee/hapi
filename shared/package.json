@@ -16,7 +16,9 @@
         "./schemas": "./src/schemas.ts",
         "./sessionExport": "./src/sessionExport.ts",
         "./types": "./src/types.ts",
-        "./voice": "./src/voice.ts"
+        "./voice": "./src/voice.ts",
+        "./voicePickerCatalog": "./src/voicePickerCatalog.ts",
+        "./voice-personality": "./src/voicePersonality.ts"
     },
     "sideEffects": false,
     "scripts": {
