@@ -170,4 +170,24 @@ describe('buildCliArgs', () => {
         expect(args).toContain('--effort')
         expect(args).toContain('high')
     })
+
+    it('builds Grok runner resume, model, effort, and permission arguments', () => {
+        const args = buildCliArgs('grok', {
+            directory: '/tmp',
+            resumeSessionId: 'grok-session-1',
+            model: 'grok-4.5',
+            effort: 'low',
+            permissionMode: 'plan'
+        })
+
+        expect(args).toEqual([
+            'grok',
+            '--resume', 'grok-session-1',
+            '--hapi-starting-mode', 'remote',
+            '--started-by', 'runner',
+            '--model', 'grok-4.5',
+            '--effort', 'low',
+            '--permission-mode', 'plan'
+        ])
+    })
 })

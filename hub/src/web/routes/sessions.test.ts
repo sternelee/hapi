@@ -98,6 +98,22 @@ function createApp(session: Session, opts?: {
         ],
         currentModelId: 'composer-2.5'
     })
+    const listGrokModelsForSession = async () => ({
+        success: true,
+        availableModels: [
+            {
+                modelId: 'grok-4.5',
+                name: 'Grok 4.5',
+                reasoningEfforts: [{ value: 'low', name: 'Low' }]
+            }
+        ],
+        currentModelId: 'grok-4.5'
+    })
+    const listGrokReasoningEffortOptionsForSession = async () => ({
+        success: true,
+        options: [{ value: 'low', name: 'Low' }],
+        currentValue: 'low'
+    })
     const resumeSession = opts?.resumeSession ?? (async (sessionId: string) => ({ type: 'success', sessionId }))
     const reopenSession = opts?.reopenSession ?? (async (sessionId: string) => ({
         type: 'success' as const,
@@ -115,6 +131,8 @@ function createApp(session: Session, opts?: {
         listCursorModelsForSession,
         listOpencodeModelsForSession,
         listOpencodeReasoningEffortOptionsForSession,
+        listGrokModelsForSession,
+        listGrokReasoningEffortOptionsForSession,
         resumeSession,
         reopenSession,
         archiveSession: archiveSessionMock,
@@ -568,6 +586,41 @@ describe('sessions routes', () => {
         expect(applySessionConfigCalls).toEqual([])
     })
 
+    it('applies model changes for remote Grok sessions', async () => {
+        const session = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'grok' }
+        })
+        const { app, applySessionConfigCalls } = createApp(session)
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'grok-4.5' })
+        })
+
+        expect(response.status).toBe(200)
+        expect(applySessionConfigCalls).toEqual([
+            ['session-1', { model: 'grok-4.5' }]
+        ])
+    })
+
+    it('rejects model changes for local Grok sessions', async () => {
+        const session = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'grok' },
+            agentState: { controlledByUser: true, requests: {}, completedRequests: {} }
+        })
+        const { app, applySessionConfigCalls } = createApp(session)
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'grok-4.5' })
+        })
+
+        expect(response.status).toBe(409)
+        expect(applySessionConfigCalls).toEqual([])
+    })
+
     it('rejects effort changes for non-Claude sessions', async () => {
         const { app, applySessionConfigCalls } = createApp(createSession())
 
@@ -607,6 +660,35 @@ describe('sessions routes', () => {
         ])
     })
 
+    it('applies effort changes for remote Grok sessions and rejects local control', async () => {
+        const remote = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'grok' }
+        })
+        const remoteApp = createApp(remote)
+        const remoteResponse = await remoteApp.app.request('/api/sessions/session-1/effort', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ effort: 'low' })
+        })
+        expect(remoteResponse.status).toBe(200)
+        expect(remoteApp.applySessionConfigCalls).toEqual([
+            ['session-1', { effort: 'low' }]
+        ])
+
+        const local = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'grok' },
+            agentState: { controlledByUser: true, requests: {}, completedRequests: {} }
+        })
+        const localApp = createApp(local)
+        const localResponse = await localApp.app.request('/api/sessions/session-1/effort', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ effort: 'low' })
+        })
+        expect(localResponse.status).toBe(409)
+        expect(localApp.applySessionConfigCalls).toEqual([])
+    })
+
     it('returns Codex models for active Codex sessions', async () => {
         const { app } = createApp(createSession())
 
@@ -636,6 +718,28 @@ describe('sessions routes', () => {
                 { value: 'low', name: 'Low' },
                 { value: 'medium', name: 'Medium' }
             ],
+            currentValue: 'low'
+        })
+    })
+
+    it('returns Grok model and effort catalogs for active Grok sessions', async () => {
+        const session = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'grok' }
+        })
+        const { app } = createApp(session)
+
+        const modelsResponse = await app.request('/api/sessions/session-1/grok-models')
+        expect(modelsResponse.status).toBe(200)
+        expect(await modelsResponse.json()).toMatchObject({
+            success: true,
+            currentModelId: 'grok-4.5'
+        })
+
+        const effortResponse = await app.request('/api/sessions/session-1/grok-reasoning-effort-options')
+        expect(effortResponse.status).toBe(200)
+        expect(await effortResponse.json()).toEqual({
+            success: true,
+            options: [{ value: 'low', name: 'Low' }],
             currentValue: 'low'
         })
     })

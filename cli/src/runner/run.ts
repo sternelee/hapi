@@ -1090,13 +1090,15 @@ export function buildCliArgs(
     ? 'codex'
     : agent === 'cursor'
       ? 'cursor'
-      : agent === 'kimi'
-        ? 'kimi'
-        : agent === 'opencode'
-          ? 'opencode'
-          : agent === 'pi'
-            ? 'pi'
-            : 'claude';
+      : agent === 'grok'
+        ? 'grok'
+        : agent === 'kimi'
+          ? 'kimi'
+          : agent === 'opencode'
+            ? 'opencode'
+            : agent === 'pi'
+              ? 'pi'
+              : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
     if (agent === 'codex') {
@@ -1114,7 +1116,7 @@ export function buildCliArgs(
   if (options.model) {
     args.push('--model', options.model);
   }
-  if (options.effort && (agent === 'claude' || agent === 'pi')) {
+  if (options.effort && (agent === 'claude' || agent === 'grok' || agent === 'pi')) {
     args.push('--effort', options.effort);
   }
   if (options.modelReasoningEffort && (agent === 'codex' || agent === 'opencode')) {

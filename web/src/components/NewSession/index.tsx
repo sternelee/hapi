@@ -1,12 +1,14 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { ApiClient } from '@/api/client'
 import type { Machine } from '@/types/api'
+import type { GrokPermissionMode } from '@hapi/protocol'
 import { usePlatform } from '@/hooks/usePlatform'
 import { useMachinePathsExists } from '@/hooks/useMachinePathsExists'
 import { useSpawnSession } from '@/hooks/mutations/useSpawnSession'
 import { useCodexModels } from '@/hooks/queries/useCodexModels'
 import { useCursorModelsForMachine } from '@/hooks/queries/useCursorModelsForMachine'
 import { useOpencodeModelsForCwd } from '@/hooks/queries/useOpencodeModelsForCwd'
+import { useGrokModelsForCwd } from '@/hooks/queries/useGrokModelsForCwd'
 import { useSessions } from '@/hooks/queries/useSessions'
 import { useActiveSuggestions, type Suggestion } from '@/hooks/useActiveSuggestions'
 import { useDirectorySuggestions } from '@/hooks/useDirectorySuggestions'
@@ -30,15 +32,17 @@ import {
     saveNewSessionFormDraft,
     shouldRestoreNewSessionFormDraft
 } from './newSessionFormDraft'
-import type { AgentType, ClaudeEffort, CodexReasoningEffort, SessionType } from './types'
+import type { AgentType, LaunchEffort, CodexReasoningEffort, SessionType } from './types'
 import { ActionButtons } from './ActionButtons'
 import { AgentSelector } from './AgentSelector'
 import { DirectorySection } from './DirectorySection'
+import { GrokPermissionModeSelector } from './GrokPermissionModeSelector'
 import { MachineSelector } from './MachineSelector'
 import { ModelSelector } from './ModelSelector'
 import { OpencodeModelSelector } from './OpencodeModelSelector'
-import { ClaudeEffortSelector } from './ClaudeEffortSelector'
+import { LaunchEffortSelector } from './LaunchEffortSelector'
 import { shouldEnableOpencodeModelDiscovery } from './opencodeModelsGate'
+import { buildGrokEffortOptions, buildGrokModelOptions, shouldEnableGrokModelDiscovery } from './grokModels'
 import { ReasoningEffortSelector } from './ReasoningEffortSelector'
 import {
     loadPreferredAgent,
@@ -75,9 +79,10 @@ export function NewSession(props: {
     const [model, setModel] = useState('auto')
     const [cursorSelectedBase, setCursorSelectedBase] = useState('auto')
     const pendingCursorBaseRef = useRef<string | null>(null)
-    const [effort, setEffort] = useState<ClaudeEffort>('auto')
+    const [effort, setEffort] = useState<LaunchEffort>('auto')
     const [modelReasoningEffort, setModelReasoningEffort] = useState<CodexReasoningEffort>('default')
     const [yoloMode, setYoloMode] = useState(loadPreferredYoloMode)
+    const [grokPermissionMode, setGrokPermissionMode] = useState<GrokPermissionMode>('default')
     const [sessionType, setSessionType] = useState<SessionType>('simple')
     const [worktreeName, setWorktreeName] = useState('')
     const [directoryCreationConfirmed, setDirectoryCreationConfirmed] = useState(false)
@@ -93,6 +98,7 @@ export function NewSession(props: {
     useEffect(() => {
         setEffort('auto')
         setModelReasoningEffort('default')
+        setGrokPermissionMode('default')
         if (agent !== 'cursor') {
             setModel('auto')
             setCursorSelectedBase('auto')
@@ -146,6 +152,7 @@ export function NewSession(props: {
         setEffort(draft.effort)
         setModelReasoningEffort(draft.modelReasoningEffort)
         setYoloMode(draft.yoloMode)
+        setGrokPermissionMode(draft.grokPermissionMode)
         setSessionType(draft.sessionType)
         setWorktreeName(draft.worktreeName)
         clearNewSessionFormDraft()
@@ -364,6 +371,38 @@ export function NewSession(props: {
             cwdExists: deferredDirectoryExists,
         })
     })
+    const grokModelsState = useGrokModelsForCwd({
+        api: props.api,
+        machineId,
+        cwd: deferredDirectory,
+        enabled: shouldEnableGrokModelDiscovery({
+            agent,
+            machineId,
+            cwd: deferredDirectory,
+            cwdExists: deferredDirectoryExists,
+        })
+    })
+    const grokModelOptions = useMemo(
+        () => buildGrokModelOptions(grokModelsState.availableModels),
+        [grokModelsState.availableModels]
+    )
+    const grokEffortOptions = useMemo(
+        () => buildGrokEffortOptions(
+            grokModelsState.availableModels,
+            model,
+            grokModelsState.currentModelId
+        ),
+        [grokModelsState.availableModels, grokModelsState.currentModelId, model]
+    )
+    useEffect(() => {
+        if (
+            agent === 'grok'
+            && grokPermissionMode === 'auto'
+            && grokModelsState.autoPermissionModeSupported === false
+        ) {
+            setGrokPermissionMode('default')
+        }
+    }, [agent, grokPermissionMode, grokModelsState.autoPermissionModeSupported])
     useEffect(() => {
         // Auto-pick the OpenCode default model when discovery finishes, so the
         // form has a sensible value if the user hits Enter without scrolling.
@@ -476,6 +515,7 @@ export function NewSession(props: {
             effort,
             modelReasoningEffort,
             yoloMode,
+            grokPermissionMode,
             sessionType,
             worktreeName
         })
@@ -489,6 +529,7 @@ export function NewSession(props: {
         effort,
         modelReasoningEffort,
         yoloMode,
+        grokPermissionMode,
         sessionType,
         worktreeName,
         trimmedDirectory
@@ -580,7 +621,9 @@ export function NewSession(props: {
             const resolvedModel = agent === 'opencode'
                 ? (opencodeSelectedModel ?? undefined)
                 : (model !== 'auto' ? model : undefined)
-            const resolvedEffort = agent === 'claude' && effort !== 'auto' ? effort : undefined
+            const resolvedEffort = (agent === 'claude' || agent === 'grok') && effort !== 'auto'
+                ? effort
+                : undefined
             const resolvedModelReasoningEffort = (agent === 'codex' || agent === 'opencode') && modelReasoningEffort !== 'default'
                 ? modelReasoningEffort
                 : undefined
@@ -591,7 +634,8 @@ export function NewSession(props: {
                 model: resolvedModel,
                 effort: resolvedEffort,
                 modelReasoningEffort: resolvedModelReasoningEffort,
-                yolo: yoloMode,
+                yolo: agent === 'grok' ? undefined : yoloMode,
+                permissionMode: agent === 'grok' ? grokPermissionMode : undefined,
                 sessionType,
                 worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
             })
@@ -717,25 +761,32 @@ export function NewSession(props: {
                         options={
                             agent === 'codex'
                                 ? codexModelOptions
+                                : agent === 'grok'
+                                    ? grokModelOptions
                                 : undefined
                         }
                         isDisabled={
                             isFormDisabled
                             || (agent === 'codex' && Boolean(codexModelsState.error))
+                            || (agent === 'grok' && Boolean(grokModelsState.error))
                         }
-                        isLoading={agent === 'codex' && codexModelsState.isLoading}
+                        isLoading={(agent === 'codex' && codexModelsState.isLoading)
+                            || (agent === 'grok' && grokModelsState.isLoading)}
                         error={agent === 'codex' && codexModelsState.error
                             ? `${t('newSession.model.loadFailed')}: ${codexModelsState.error}`
-                            : null}
+                            : agent === 'grok' && grokModelsState.error
+                                ? `${t('newSession.model.loadFailed')}: ${grokModelsState.error}`
+                                : null}
                         onModelChange={setModel}
                     />
                 )
             )}
-            <ClaudeEffortSelector
+            <LaunchEffortSelector
                 agent={agent}
                 effort={effort}
                 isDisabled={isFormDisabled}
                 onEffortChange={setEffort}
+                grokOptions={agent === 'grok' ? grokEffortOptions : undefined}
             />
             <ReasoningEffortSelector
                 agent={agent}
@@ -744,11 +795,20 @@ export function NewSession(props: {
                 isDisabled={isFormDisabled || (agent === 'codex' && codexModelsState.isLoading)}
                 onChange={setModelReasoningEffort}
             />
-            <YoloToggle
-                yoloMode={yoloMode}
+            <GrokPermissionModeSelector
+                agent={agent}
+                value={grokPermissionMode}
+                autoPermissionModeSupported={grokModelsState.autoPermissionModeSupported}
                 isDisabled={isFormDisabled}
-                onToggle={setYoloMode}
+                onChange={setGrokPermissionMode}
             />
+            {agent !== 'grok' ? (
+                <YoloToggle
+                    yoloMode={yoloMode}
+                    isDisabled={isFormDisabled}
+                    onToggle={setYoloMode}
+                />
+            ) : null}
 
             {(error ?? spawnError) ? (
                 <div className="px-3 py-2 text-sm text-red-600">

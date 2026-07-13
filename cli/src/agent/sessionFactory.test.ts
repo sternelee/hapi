@@ -136,6 +136,7 @@ describe('bootstrapExistingSession', () => {
             codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',
+            grokSessionId: 'grok-thread-1',
             cursorSessionId: 'cursor-thread-1',
             cursorSessionProtocol: 'acp',
             summary: {
@@ -164,6 +165,7 @@ describe('bootstrapExistingSession', () => {
             codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',
+            grokSessionId: 'grok-thread-1',
             cursorSessionId: 'cursor-thread-1',
             cursorSessionProtocol: 'acp',
             summary: {
@@ -176,12 +178,14 @@ describe('bootstrapExistingSession', () => {
         expect(sessionClient.updateMetadata).toHaveBeenCalledOnce()
         const updateHandler = sessionClient.updateMetadata.mock.calls[0][0]
         expect(updateHandler(session.metadata)).toEqual(expect.objectContaining({
-            codexSessionId: 'codex-thread-1'
+            codexSessionId: 'codex-thread-1',
+            grokSessionId: 'grok-thread-1'
         }))
         expect(notifyRunnerSessionStartedMock).toHaveBeenCalledWith(
             'hapi-session-1',
             expect.objectContaining({
-                codexSessionId: 'codex-thread-1'
+                codexSessionId: 'codex-thread-1',
+                grokSessionId: 'grok-thread-1'
             })
         )
     })

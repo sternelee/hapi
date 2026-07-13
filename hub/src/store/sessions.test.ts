@@ -152,6 +152,7 @@ describe('updateSessionMetadata: protocol resume token preservation', () => {
         ['codexSessionId', 'codex-thread-x'],
         ['geminiSessionId', 'gemini-thread-x'],
         ['opencodeSessionId', 'opencode-thread-x'],
+        ['grokSessionId', 'grok-thread-x'],
         ['cursorSessionId', 'cursor-thread-x'],
         ['kimiSessionId', 'kimi-thread-x']
     ])('preserves %s across an archive metadata replacement', (field, value) => {

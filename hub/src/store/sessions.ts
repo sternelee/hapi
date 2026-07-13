@@ -58,6 +58,7 @@ const SIMPLE_RESUME_TOKENS = [
     'codexSessionId',
     'geminiSessionId',
     'opencodeSessionId',
+    'grokSessionId',
     'cursorSessionId',
     'kimiSessionId'
 ] as const

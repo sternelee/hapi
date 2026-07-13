@@ -243,6 +243,8 @@ export default {
   'newSession.yolo': 'YOLO mode',
   'newSession.yolo.title': 'Bypass approvals and sandbox',
   'newSession.yolo.desc': 'Uses dangerous agent flags when spawning.',
+  'newSession.grokAutoUnavailable': 'unavailable',
+  'newSession.grokAutoUnavailableDesc': 'Grok did not enable Auto permissions for this account or CLI build.',
   'newSession.create': 'Create',
   'newSession.creating': 'Creating…',
 

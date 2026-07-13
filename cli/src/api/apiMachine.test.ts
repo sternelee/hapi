@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 const ioMock = vi.hoisted(() => vi.fn())
 const listOpencodeModelsForCwdMock = vi.hoisted(() => vi.fn())
+const listGrokModelsForCwdMock = vi.hoisted(() => vi.fn())
 
 vi.mock('socket.io-client', () => ({
     io: ioMock
@@ -16,6 +17,10 @@ vi.mock('@/api/auth', () => ({
 
 vi.mock('../modules/common/opencodeModels', () => ({
     listOpencodeModelsForCwd: listOpencodeModelsForCwdMock
+}))
+
+vi.mock('../modules/common/grokModels', () => ({
+    listGrokModelsForCwd: listGrokModelsForCwdMock
 }))
 
 import { ApiMachineClient, normalizeWindowsDriveRoot } from './apiMachine'
@@ -60,12 +65,22 @@ async function callListOpencodeModels(client: ApiMachineClient, machineId: strin
     return JSON.parse(raw) as unknown
 }
 
+async function callListGrokModels(client: ApiMachineClient, machineId: string, cwd: string): Promise<unknown> {
+    const manager = (client as unknown as { rpcHandlerManager: { handleRequest: (req: { method: string; params: string }) => Promise<string> } }).rpcHandlerManager
+    const raw = await manager.handleRequest({
+        method: `${machineId}:listGrokModelsForCwd`,
+        params: JSON.stringify({ cwd })
+    })
+    return JSON.parse(raw) as unknown
+}
+
 describe('ApiMachineClient listOpencodeModelsForCwd handler', () => {
     let workspaceRoot: string
 
     beforeEach(() => {
         ioMock.mockReset()
         listOpencodeModelsForCwdMock.mockReset()
+        listGrokModelsForCwdMock.mockReset()
         workspaceRoot = mkdtempSync(join(tmpdir(), 'hapi-machine-ws-'))
     })
 
@@ -152,6 +167,58 @@ describe('ApiMachineClient listOpencodeModelsForCwd handler', () => {
             expect(listOpencodeModelsForCwdMock).toHaveBeenCalledWith(realpathSync.native(secondWorkspaceRoot))
         } finally {
             rmSync(secondWorkspaceRoot, { recursive: true, force: true })
+            client.shutdown()
+        }
+    })
+})
+
+describe('ApiMachineClient listGrokModelsForCwd handler', () => {
+    let workspaceRoot: string
+
+    beforeEach(() => {
+        ioMock.mockReset()
+        listGrokModelsForCwdMock.mockReset()
+        workspaceRoot = mkdtempSync(join(tmpdir(), 'hapi-grok-machine-ws-'))
+    })
+
+    afterEach(() => {
+        rmSync(workspaceRoot, { recursive: true, force: true })
+    })
+
+    it('rejects cwd outside workspace roots before running grok models', async () => {
+        const machine = makeMachine('grok-machine-1')
+        const client = new ApiMachineClient('cli-token', machine, [workspaceRoot])
+        const outsideCwd = mkdtempSync(join(tmpdir(), 'hapi-grok-outside-'))
+
+        try {
+            expect(await callListGrokModels(client, machine.id, outsideCwd)).toEqual({
+                success: false,
+                error: 'Path is outside workspace roots'
+            })
+            expect(listGrokModelsForCwdMock).not.toHaveBeenCalled()
+        } finally {
+            rmSync(outsideCwd, { recursive: true, force: true })
+            client.shutdown()
+        }
+    })
+
+    it('forwards a workspace cwd to the Grok model probe', async () => {
+        const machine = makeMachine('grok-machine-2')
+        const client = new ApiMachineClient('cli-token', machine, [workspaceRoot])
+        listGrokModelsForCwdMock.mockResolvedValueOnce({
+            success: true,
+            availableModels: [{ modelId: 'grok-4.5' }],
+            currentModelId: 'grok-4.5'
+        })
+
+        try {
+            expect(await callListGrokModels(client, machine.id, workspaceRoot)).toEqual({
+                success: true,
+                availableModels: [{ modelId: 'grok-4.5' }],
+                currentModelId: 'grok-4.5'
+            })
+            expect(listGrokModelsForCwdMock).toHaveBeenCalledWith(realpathSync.native(workspaceRoot))
+        } finally {
             client.shutdown()
         }
     })
