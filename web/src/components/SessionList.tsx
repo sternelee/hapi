@@ -22,6 +22,7 @@ import { formatRelativeTime } from '@/lib/relativeTime'
 import { formatScheduledTooltipDetail } from '@/lib/scheduledTime'
 import { getCodexImportedAt, subscribeCodexImportedSessions } from '@/lib/codexImportedSessions'
 import { formatReopenError } from '@/lib/reopenError'
+import { getSessionTitle } from '@/lib/sessionTitle'
 import type { Machine } from '@/types/api'
 import { getMachinePlatform, presentMachineHealth } from '@/lib/machineHealth'
 import { MachineGroupHeader } from '@/components/MachineGroupHeader'
@@ -439,19 +440,7 @@ function ChevronIcon(props: { className?: string; collapsed?: boolean }) {
     )
 }
 
-export function getSessionTitle(session: SessionSummary): string {
-    if (session.metadata?.name) {
-        return session.metadata.name
-    }
-    if (session.metadata?.summary?.text) {
-        return session.metadata.summary.text
-    }
-    if (session.metadata?.path) {
-        const parts = session.metadata.path.split('/').filter(Boolean)
-        return parts.length > 0 ? parts[parts.length - 1] : session.id.slice(0, 8)
-    }
-    return session.id.slice(0, 8)
-}
+export { getSessionTitle } from '@/lib/sessionTitle'
 
 function getTodoProgress(session: SessionSummary): { completed: number; total: number } | null {
     if (!session.todoProgress) return null
